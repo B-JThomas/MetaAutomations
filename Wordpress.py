@@ -60,6 +60,15 @@ class WordpressHelper:
 
         if response.status_code == 200 and response.json():
             return f"{base}/wp/v2/pages" 
+        
+        types_response = requests.get(f"{base}/wp/v2/types", headers=self.headers)
+        if types_response.status_code == 200:
+            post_types = types_response.json().keys()  # Example: ['posts', 'pages', 'courses', ...]
+
+            for post_type in post_types:
+                response = requests.get(f"{base}/wp/v2/{post_type}?slug={slug}", headers=self.headers)
+                if response.status_code == 200 and response.json():
+                    return f"{base}/wp/v2/{post_type}"  # Return the matching CPT endpoint
 
         # Return None if no valid post or page is found
         print(f"Failed to determine type for URL {url}")
@@ -113,6 +122,7 @@ class WordpressHelper:
                 return False
 
         existing_meta = self.get_existing_meta(endpoint, post_id)
+        print(f"\n\n{existing_meta}")
         if existing_meta is None:
             return False  # Exit if metadata couldn't be retrieved
 
@@ -126,9 +136,12 @@ class WordpressHelper:
         update_payload = {
             "meta": updated_meta
         }
+        
         url = f"{endpoint}/{post_id}"
         update_response = requests.put(url, json=update_payload, headers=self.headers)
-
+        print(update_payload)
+        print(url)
+        print(f"\n\n{update_response.json()}")
         if update_response.status_code == 200:
             print(f"Successfully updated SEO metadata for {data['url']}")
             return True
@@ -140,15 +153,16 @@ class WordpressHelper:
     
 # ================= MAIN ==================
 if __name__ == "__main__":
-    client_name = "SMARTGADGETS"
+    client_name = "PREFTRAIN"
     smartgadgets = WordpressHelper(client_name)
 
     data = {
-        "url": "https://smartgadgets.com.au/brand",
-        "meta_title": "Brands | SmartGadgets",
+        "url": "https://www.preftrain.com.au/courses/telephone-de-escalation-techniques/",
+        "meta_title": "Telephone De-Escalation Training Course | Get a Quote Today"
     }
-    
+
     smartgadgets.update_meta_yoast_id(data)
+    
 
 
 
